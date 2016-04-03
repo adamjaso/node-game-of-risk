@@ -1,9 +1,9 @@
 {
   "targets": [
     {
-      "target_name": "addon",
+      "target_name": "GameOfRisk",
       "sources": [
-        "native/addon.cc"
+        "native/GameOfRisk.cc"
       ],
       "include_dirs": ["<!(node -e \"require('nan')\")"]
     }

@@ -1,7 +1,7 @@
-#ifndef StringBuilder_h
-#define StringBuilder_h
-
 #include <iostream>
+
+#ifndef StringBuilder_cc
+#define StringBuilder_cc
 
 class StringBuilder {
 private:
