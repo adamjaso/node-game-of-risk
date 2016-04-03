@@ -1,9 +1,8 @@
-#include <iostream>
-#include <random>
-#include "Random.h"
-
 #ifndef Die_cc
 #define Die_cc
+
+#include <iostream>
+#include "Random.cc"
 
 namespace Risk {
 

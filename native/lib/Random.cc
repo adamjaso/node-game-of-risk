@@ -1,8 +1,8 @@
-#include <cstdlib>
-#include <ctime>
-
 #ifndef Random_cc
 #define Random_cc
+
+#include <cstdlib>
+#include <ctime>
 
 namespace Risk {
 

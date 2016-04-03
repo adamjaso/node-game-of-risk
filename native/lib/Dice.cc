@@ -1,10 +1,10 @@
-#include <iostream>
-#include <string>
-#include "Die.h"
-#include "StringBuilder.h"
-
 #ifndef Dice_cc
 #define Dice_cc
+
+#include <iostream>
+#include <string>
+#include "Die.cc"
+#include "StringBuilder.cc"
 
 namespace Risk {
 
@@ -82,15 +82,15 @@ namespace Risk {
 
         void SetNumUsableDefense(int numArmies) {
             if (numArmies >= 2) {
-                this->defense.SetNumUsable(2);
+                this->SetNumUsable(2);
 
             } else if (numArmies >= 1) {
                 this->PrintDefenseDiceChange(1);
-                this->defense.SetNumUsable(1);
+                this->SetNumUsable(1);
 
             } else {
                 this->PrintDefenseDiceChange(0);
-                this->defense.SetNumUsable(0);
+                this->SetNumUsable(0);
             }
         }
 
@@ -123,7 +123,7 @@ namespace Risk {
             min = std::min(min, this->GetNumUsable());
             StringBuilder builder = StringBuilder::StringBuilder();
             for (int i = 0; i < min; i++) {
-                builder.append(" " + toString(this->GetDie(i).GetValue() + 1));
+                builder.append(" " + ToString(this->GetDie(i).GetValue() + 1));
             }
             return builder.str();
         }

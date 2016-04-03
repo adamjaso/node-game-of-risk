@@ -1,8 +1,8 @@
-#include <iostream>
-#include <math.h>
-
 #ifndef Stats_cc
 #define Stats_cc
+
+#include <iostream>
+#include <math.h>
 
 namespace Risk {
 

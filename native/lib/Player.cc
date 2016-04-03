@@ -52,6 +52,10 @@ namespace Risk {
             this->dice.SetNumUsableOffense(this->numArmies);
         }
 
+        void Decrement(int numArmies) {
+            this->numArmies -= numArmies;
+        }
+
         Stats& GetLosses() {
             return this->losses;
         }
@@ -61,7 +65,7 @@ namespace Risk {
         }
 
         int GetNumWins() {
-            return this->wins.getCount();
+            return this->wins.GetCount();
         }
 
         int GetNumArmies() {
