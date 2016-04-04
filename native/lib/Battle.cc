@@ -16,8 +16,10 @@ namespace Risk {
 
     class Battle : public ObjectWrap {
 
+    private:
         bool log = false;
 
+    protected:
         Player offense;
         Player defense;
 
@@ -137,16 +139,11 @@ namespace Risk {
         }
 
         static NAN_MODULE_INIT(Init) {
+            // define prototype
             v8::Local<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
             v8::Local<v8::ObjectTemplate> otpl = tpl->InstanceTemplate();
             tpl->SetClassName(Nan::New("Battle").ToLocalChecked());
             tpl->InstanceTemplate()->SetInternalFieldCount(1);
-
-            // define prototype methods
-            SetPrototypeMethod(tpl, "playAsync", PlayAsync);
-            SetPrototypeMethod(tpl, "playSync", PlaySync);
-            SetPrototypeMethod(tpl, "setDebug", SetDebug);
-            SetPrototypeMethod(tpl, "reset", Reset);
 
             // define prototype properties
             SetAccessor(otpl, Nan::New("numDefense").ToLocalChecked(), GetNumDefense);
@@ -155,11 +152,18 @@ namespace Risk {
             SetAccessor(otpl, Nan::New("numOffenseRemaining").ToLocalChecked(), GetNumOffenseRemaining);
             SetAccessor(otpl, Nan::New("numOffenseWins").ToLocalChecked(), GetNumOffenseWins);
             SetAccessor(otpl, Nan::New("numDefenseWins").ToLocalChecked(), GetNumDefenseWins);
+            SetAccessor(otpl, Nan::New("offense").ToLocalChecked(), GetOffense);
+            SetAccessor(otpl, Nan::New("defense").ToLocalChecked(), GetDefense);
+
+            // define prototype methods
+            SetPrototypeMethod(tpl, "playAsync", PlayAsync);
+            SetPrototypeMethod(tpl, "playSync", PlaySync);
+            SetPrototypeMethod(tpl, "setDebug", SetDebug);
+            SetPrototypeMethod(tpl, "reset", Reset);
 
             // define Battle on exports
             constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
-            Nan::Set(target, Nan::New("Battle").ToLocalChecked(),
-                Nan::GetFunction(tpl).ToLocalChecked());
+            Nan::Set(target, Nan::New("Battle").ToLocalChecked(), Nan::GetFunction(tpl).ToLocalChecked());
         }
 
         static NAN_METHOD(New) {
@@ -175,6 +179,22 @@ namespace Risk {
                 v8::Local<v8::Function> cons = Nan::New(constructor());
                 info.GetReturnValue().Set(Nan::NewInstance(cons, argc, argv).ToLocalChecked());
             }
+        }
+
+        /**
+         * Battle.prototype.offense
+         */
+        static NAN_GETTER(GetOffense) {
+            Battle *battle = Nan::ObjectWrap::Unwrap<Battle>(info.Holder());
+            info.GetReturnValue().Set(v8::Local<v8::Object>(battle->offense.handle()));
+        }
+
+        /**
+         * Battle.prototype.defense
+         */
+        static NAN_GETTER(GetDefense) {
+            Battle *battle = Nan::ObjectWrap::Unwrap<Battle>(info.Holder());
+            info.GetReturnValue().Set(battle->defense.handle());
         }
 
         /**

@@ -5,6 +5,7 @@
 #include "functions.cc"
 #include "lib/Random.cc"
 #include "lib/Battle.cc"
+#include "lib/Player.cc"
 #include "AsyncBattle.cc"
 
 using v8::FunctionTemplate;
@@ -27,6 +28,7 @@ NAN_MODULE_INIT(InitAll) {
         GetFunction(New<FunctionTemplate>(Risk::Battle::PlayAsync)).ToLocalChecked());
 
     Risk::Battle::Init(target);
+    Risk::Player::Init(target);
 
 }
 

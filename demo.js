@@ -6,6 +6,9 @@ let iters = 100000;
 console.log(r.random(), r, new r.Battle(8,8));
 let b = new r.Battle(8,8);
 
+let p = new r.Player('Adam', 3, 8);
+console.log(p);
+
 r.Battle.prototype.play = function(numPlays) {
     let self = this;
     return new Promise(function(resolve) {

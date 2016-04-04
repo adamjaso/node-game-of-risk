@@ -63,20 +63,20 @@ NAN_METHOD(Battle::PlayAsync) {
     int numPlays;
     Local<Function> callback;
 
-    if (1 == info.Length()) {
+    if (3 == info.Length()) {
         battle = info[0].As<v8::Object>();
-        numPlays = 1;
-        callback = info[0].As<v8::Function>();
+        numPlays = info[1]->Uint32Value();
+        callback = info[2].As<v8::Function>();
 
     } else if (2 == info.Length()) {
         battle = info.Holder();
         numPlays = info[0]->Uint32Value();
         callback = info[1].As<v8::Function>();
 
-    } else if (3 == info.Length()) {
-        battle = info[0].As<v8::Object>();
-        numPlays = info[1]->Uint32Value();
-        callback = info[2].As<v8::Function>();
+    } else {
+        battle = info.Holder();
+        numPlays = 1;
+        callback = info[0].As<v8::Function>();
     }
 
     AsyncQueueWorker(new AsyncBattle(new Nan::Callback(callback), *Nan::ObjectWrap::Unwrap<Battle>(battle), numPlays));

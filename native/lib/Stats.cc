@@ -6,7 +6,7 @@
 
 namespace Risk {
 
-    class Stats {
+    class Stats : public Nan::ObjectWrap {
 
         long decimals = 10000L;
         long count = 0L;
