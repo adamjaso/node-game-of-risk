@@ -24,7 +24,7 @@ NAN_MODULE_INIT(InitAll) {
         GetFunction(New<FunctionTemplate>(RandomFunction)).ToLocalChecked());
 
     Set(target, New<String>("playAsync").ToLocalChecked(),
-        GetFunction(New<FunctionTemplate>(RandomFunction)).ToLocalChecked());
+        GetFunction(New<FunctionTemplate>(Risk::Battle::PlayAsync)).ToLocalChecked());
 
     Risk::Battle::Init(target);
 

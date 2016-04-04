@@ -8,6 +8,7 @@ namespace Risk {
 
     class Die {
 
+    private:
         int value = 0;
 
     public:

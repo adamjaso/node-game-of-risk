@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <cstdlib>
 #include "Die.cc"
 #include "StringBuilder.cc"
 
@@ -123,7 +124,7 @@ namespace Risk {
             min = std::min(min, this->GetNumUsable());
             StringBuilder builder = StringBuilder::StringBuilder();
             for (int i = 0; i < min; i++) {
-                builder.append(" " + ToString(this->GetDie(i).GetValue() + 1));
+                builder.append(" " + std::to_string(this->GetDie(i).GetValue() + 1));
             }
             return builder.str();
         }

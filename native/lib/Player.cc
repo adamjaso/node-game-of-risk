@@ -3,7 +3,7 @@
 
 namespace Risk {
 
-    class Player {
+    class Player : public Nan::ObjectWrap {
     private:
         bool log = false;
 
@@ -17,9 +17,9 @@ namespace Risk {
     public:
         Player(std::string name, int numDice, int numArmies) :
             name(name),
-            dice(numDice),
             numArmies(numArmies),
             numArmiesOriginal(numArmies),
+            dice(numDice),
             wins(Stats::Stats("wins", 1)),
             losses(Stats::Stats("losses", 4)) {}
 

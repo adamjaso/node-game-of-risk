@@ -25,7 +25,7 @@ namespace Risk {
 
     private:
         class Battle& battle;
-        int numPlays;
+        int numPlays = 0;
 
     public:
         explicit AsyncBattle(Callback *callback, Battle& battle, int numPlays) : AsyncWorker(callback), battle(battle), numPlays(numPlays) {}
@@ -37,9 +37,7 @@ namespace Risk {
       // here, so everything we need for input and output
       // should go on `this`.
         void Execute () {
-            for (int i = 0; i < this->numPlays; i++) {
-                this->battle.Play();
-            }
+            this->battle.PlayFor(this->numPlays);
         }
 
         // Executed when the async work is complete
@@ -60,11 +58,28 @@ namespace Risk {
 
 NAN_METHOD(Battle::PlayAsync) {
     Nan::HandleScope scope;
-    Battle *battle = Nan::ObjectWrap::Unwrap<Battle>(info.Holder());
-    int numPlays = info[0]->Uint32Value();
-    Nan::Callback *callback = new Nan::Callback(info[1].As<v8::Function>());
 
-    AsyncQueueWorker(new AsyncBattle(callback, *battle, numPlays));
+    Local<Object> battle;
+    int numPlays;
+    Local<Function> callback;
+
+    if (1 == info.Length()) {
+        battle = info[0].As<v8::Object>();
+        numPlays = 1;
+        callback = info[0].As<v8::Function>();
+
+    } else if (2 == info.Length()) {
+        battle = info.Holder();
+        numPlays = info[0]->Uint32Value();
+        callback = info[1].As<v8::Function>();
+
+    } else if (3 == info.Length()) {
+        battle = info[0].As<v8::Object>();
+        numPlays = info[1]->Uint32Value();
+        callback = info[2].As<v8::Function>();
+    }
+
+    AsyncQueueWorker(new AsyncBattle(new Nan::Callback(callback), *Nan::ObjectWrap::Unwrap<Battle>(battle), numPlays));
 }
 
 #endif
