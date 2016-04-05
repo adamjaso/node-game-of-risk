@@ -115,6 +115,7 @@ namespace Risk {
             SetAccessor(otpl, Nan::New("numArmies").ToLocalChecked(), GetNumArmies);
             SetAccessor(otpl, Nan::New("numWins").ToLocalChecked(), GetNumWins);
             SetAccessor(otpl, Nan::New("losses").ToLocalChecked(), GetLosses);
+            SetAccessor(otpl, Nan::New("dice").ToLocalChecked(), GetDice);
 
             // define prototype methods
             SetPrototypeMethod(tpl, "reset", Reset);
@@ -175,7 +176,6 @@ namespace Risk {
            * Player.prototype.numWins
            */
           static NAN_GETTER(GetNumWins) {
-              Nan::HandleScope scope;
               int numWins = Nan::ObjectWrap::Unwrap<Player>(info.Holder())->GetNumWins();
               info.GetReturnValue().Set(numWins);
           }
@@ -184,9 +184,22 @@ namespace Risk {
            * Player.prototype.losses
            */
           static NAN_GETTER(GetLosses) {
-              Nan::HandleScope scope;
               Player* player = Nan::ObjectWrap::Unwrap<Player>(info.Holder());
               info.GetReturnValue().Set(player->losses.handle());
+          }
+
+          static NAN_GETTER(GetDice) {
+                v8::Handle<v8::Array> array = v8::Array::New(v8::Isolate::GetCurrent(), 3);
+                if (array.IsEmpty()) {
+                    info.GetReturnValue().Set(v8::Handle<v8::Array>());
+                    return;
+                }
+                Player* player = Nan::ObjectWrap::Unwrap<Player>(info.Holder());
+                for (int i = 0; i < player->GetDice().GetNumUsable(); i++) {
+                    int value = player->GetDice().GetDie(i).GetValue();
+                    array->Set(i, Nan::New(value));
+                }
+                info.GetReturnValue().Set(array);
           }
 
           /**
