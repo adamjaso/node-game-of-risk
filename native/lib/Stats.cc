@@ -85,7 +85,7 @@ namespace Risk {
             SetAccessor(otpl, Nan::New("count").ToLocalChecked(), GetCount);
 
             // define prototype methods
-            // SetPrototypeMethod(tpl, "reset", Reset);
+            SetPrototypeMethod(tpl, "add", Add);
 
             // define Stats on exports
             constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
@@ -120,6 +120,11 @@ namespace Risk {
             const int argc = 2;
             v8::Local<v8::Value> argv[argc] = {name, decimals};
             info.GetReturnValue().Set(Nan::NewInstance(cons, argc, argv).ToLocalChecked());
+        }
+
+        static NAN_METHOD(Add) {
+            double num = info[0]->NumberValue();
+            Nan::ObjectWrap::Unwrap<Stats>(info.Holder())->Add(num);
         }
 
         static NAN_GETTER(GetAverage) {
