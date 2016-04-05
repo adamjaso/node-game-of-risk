@@ -20,8 +20,8 @@ namespace Risk {
         int numArmiesOriginal;
         int numArmies;
         Dice dice;
-        Stats wins;
-        Stats losses;
+        Stats& wins;
+        Stats& losses;
 
     public:
         Player(std::string name, int numDice, int numArmies) :
@@ -29,8 +29,8 @@ namespace Risk {
             numArmiesOriginal(numArmies),
             numArmies(numArmies),
             dice(numDice),
-            wins("wins", 1),
-            losses("losses", 4) {}
+            wins(*Stats::NewInstance("wins", 1)),
+            losses(*Stats::NewInstance("losses", 4)) {}
 
         ~Player() {}
 
@@ -92,7 +92,7 @@ namespace Risk {
         static Player* NewInstance(std::string name, int numDice, int numArmies) {
             v8::Local<v8::Function> ctor = Nan::New(constructor());
             v8::Local<v8::Value> argv[] = { v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), name.c_str()), Nan::New(numDice), Nan::New(numArmies) };
-            v8::Local<Object> instance = Nan::NewInstance(ctor, 3, argv).ToLocalChecked();
+            v8::Local<v8::Object> instance = Nan::NewInstance(ctor, 3, argv).ToLocalChecked();
             return Nan::ObjectWrap::Unwrap<Player>(instance);
         }
 
@@ -110,7 +110,14 @@ namespace Risk {
             tpl->SetClassName(Nan::New("Player").ToLocalChecked());
             tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
+            // define prototype properties
             SetAccessor(otpl, Nan::New("numArmiesOriginal").ToLocalChecked(), GetNumArmiesOriginal);
+            SetAccessor(otpl, Nan::New("numArmies").ToLocalChecked(), GetNumArmies);
+            SetAccessor(otpl, Nan::New("numWins").ToLocalChecked(), GetNumWins);
+            SetAccessor(otpl, Nan::New("losses").ToLocalChecked(), GetLosses);
+
+            // define prototype methods
+            SetPrototypeMethod(tpl, "reset", Reset);
 
             // define Player on exports
             constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
@@ -122,6 +129,7 @@ namespace Risk {
                 std::string name;
                 if (info[0]->IsString()) {
                     std::string param1(*v8::String::Utf8Value(info[0]->ToString()));
+                    name = param1;
                 } else {
                     name = NextPlayerName();
                 }
@@ -145,7 +153,7 @@ namespace Risk {
             int numDice = info[1]->IsNumber() ? Nan::To<int>(info[1]).FromJust() : 0;
             int numArmies = info[2]->IsNumber() ? Nan::To<int>(info[2]).FromJust() : 0;
             const int argc = 3;
-            v8::Local<v8::Value> argv[argc] = {name ,Nan::New(numDice), Nan::New(numArmies)};
+            v8::Local<v8::Value> argv[argc] = {name, Nan::New(numDice), Nan::New(numArmies)};
             info.GetReturnValue().Set(Nan::NewInstance(cons, argc, argv).ToLocalChecked());
         }
 
@@ -153,9 +161,41 @@ namespace Risk {
          * Player.prototype.numArmiesOriginal
          */
          static NAN_GETTER(GetNumArmiesOriginal) {
-             Player *player = Nan::ObjectWrap::Unwrap<Player>(info.Holder());
-             info.GetReturnValue().Set(player->numArmiesOriginal);
+             info.GetReturnValue().Set(Nan::ObjectWrap::Unwrap<Player>(info.Holder())->numArmiesOriginal);
          }
+
+         /**
+          * Player.prototype.numArmies
+          */
+          static NAN_GETTER(GetNumArmies) {
+              info.GetReturnValue().Set(Nan::ObjectWrap::Unwrap<Player>(info.Holder())->numArmies);
+          }
+
+          /**
+           * Player.prototype.numWins
+           */
+          static NAN_GETTER(GetNumWins) {
+              Nan::HandleScope scope;
+              int numWins = Nan::ObjectWrap::Unwrap<Player>(info.Holder())->GetNumWins();
+              info.GetReturnValue().Set(numWins);
+          }
+
+          /**
+           * Player.prototype.losses
+           */
+          static NAN_GETTER(GetLosses) {
+              Nan::HandleScope scope;
+              Player* player = Nan::ObjectWrap::Unwrap<Player>(info.Holder());
+              info.GetReturnValue().Set(player->losses.handle());
+          }
+
+          /**
+           * Player.prototype.reset()
+           */
+          static NAN_METHOD(Reset) {
+              Nan::HandleScope scope;
+              Nan::ObjectWrap::Unwrap<Player>(info.Holder())->Reset();
+          }
 
     };
 

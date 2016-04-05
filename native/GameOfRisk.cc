@@ -6,6 +6,7 @@
 #include "lib/Random.cc"
 #include "lib/Battle.cc"
 #include "lib/Player.cc"
+#include "lib/Stats.cc"
 #include "AsyncBattle.cc"
 
 using v8::FunctionTemplate;
@@ -29,7 +30,7 @@ NAN_MODULE_INIT(InitAll) {
 
     Risk::Battle::Init(target);
     Risk::Player::Init(target);
-
+    Risk::Stats::Init(target);
 }
 
 NODE_MODULE(GameOfRisk, InitAll);
