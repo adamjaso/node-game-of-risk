@@ -7,12 +7,15 @@
 #include "Stats.cc"
 #include "Player.cc"
 
-using Nan::ObjectWrap;
-using Nan::SetAccessor;
-
 using namespace std;
 
 namespace Risk {
+
+    using Nan::ObjectWrap;
+    using Nan::SetAccessor;
+
+    using v8::Local;
+    using v8::String;
 
     class Battle : public ObjectWrap {
 
@@ -20,11 +23,13 @@ namespace Risk {
         bool log = false;
 
     protected:
-        Player offense;
-        Player defense;
+        Player& offense;
+        Player& defense;
 
     public:
-        Battle(int off, int def) : offense("offense", 3, off), defense("defense", 2, def) {
+        Battle(int off, int def) : offense(*Player::NewInstance("offense", 3, off)), defense(*Player::NewInstance("defense", 2, def)) {// : offense("offense", 3, off), defense("defense", 2, def) {
+            // this->offense = *Player::NewInstance("offense", 3, off);
+            // this->defense = *Player::NewInstance("defense", 2, def);
             SetDebug(this->log);
         }
 
@@ -186,7 +191,7 @@ namespace Risk {
          */
         static NAN_GETTER(GetOffense) {
             Battle *battle = Nan::ObjectWrap::Unwrap<Battle>(info.Holder());
-            info.GetReturnValue().Set(v8::Local<v8::Object>(battle->offense.handle()));
+            info.GetReturnValue().Set(battle->offense.handle());
         }
 
         /**

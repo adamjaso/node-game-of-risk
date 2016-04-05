@@ -54,7 +54,7 @@ namespace Risk {
         }
     };
 
-}
+};
 
 NAN_METHOD(Battle::PlayAsync) {
     Nan::HandleScope scope;
@@ -80,6 +80,6 @@ NAN_METHOD(Battle::PlayAsync) {
     }
 
     AsyncQueueWorker(new AsyncBattle(new Nan::Callback(callback), *Nan::ObjectWrap::Unwrap<Battle>(battle), numPlays));
-}
+};
 
 #endif

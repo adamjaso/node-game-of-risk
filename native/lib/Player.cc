@@ -4,6 +4,9 @@
 #include <nan.h>
 
 using Nan::SetAccessor;
+using v8::Local;
+using v8::Handle;
+using v8::Object;
 
 namespace Risk {
 
@@ -82,6 +85,17 @@ namespace Risk {
             return this->numArmiesOriginal;
         }
 
+        static std::string NextPlayerName() {
+            return "Player #" + std::to_string(++autoPlayerId);
+        }
+
+        static Player* NewInstance(std::string name, int numDice, int numArmies) {
+            v8::Local<v8::Function> ctor = Nan::New(constructor());
+            v8::Local<v8::Value> argv[] = { v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), name.c_str()), Nan::New(numDice), Nan::New(numArmies) };
+            v8::Local<Object> instance = Nan::NewInstance(ctor, 3, argv).ToLocalChecked();
+            return Nan::ObjectWrap::Unwrap<Player>(instance);
+        }
+
         // Node.js Addon Boilerplate
 
         static inline Nan::Persistent<v8::Function>& constructor() {
@@ -109,7 +123,7 @@ namespace Risk {
                 if (info[0]->IsString()) {
                     std::string param1(*v8::String::Utf8Value(info[0]->ToString()));
                 } else {
-                    name = ("Player #" + std::to_string(++autoPlayerId));
+                    name = NextPlayerName();
                 }
                 int numDice = info[1]->IsNumber() ? Nan::To<int>(info[1]).FromJust() : 1;
                 int numArmies = info[2]->IsNumber() ? Nan::To<int>(info[2]).FromJust() : 1;
@@ -123,6 +137,16 @@ namespace Risk {
                 v8::Local<v8::Function> cons = Nan::New(constructor());
                 info.GetReturnValue().Set(Nan::NewInstance(cons, argc, argv).ToLocalChecked());
             }
+        }
+
+        static NAN_METHOD(NewInstance) {
+            v8::Local<v8::Function> cons = Nan::New(constructor());
+            v8::Local<v8::String> name = info[0]->IsString() ? info[0]->ToString() : v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), NextPlayerName().c_str());
+            int numDice = info[1]->IsNumber() ? Nan::To<int>(info[1]).FromJust() : 0;
+            int numArmies = info[2]->IsNumber() ? Nan::To<int>(info[2]).FromJust() : 0;
+            const int argc = 3;
+            v8::Local<v8::Value> argv[argc] = {name ,Nan::New(numDice), Nan::New(numArmies)};
+            info.GetReturnValue().Set(Nan::NewInstance(cons, argc, argv).ToLocalChecked());
         }
 
         /**
