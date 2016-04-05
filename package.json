@@ -6,7 +6,9 @@
   "dependencies": {
     "nan": "^2.2.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "chokidar": "^1.4.3"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
