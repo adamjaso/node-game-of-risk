@@ -30,5 +30,8 @@
   "bugs": {
     "url": "https://github.com/adamjaso/node-game-of-risk/issues"
   },
-  "homepage": "https://github.com/adamjaso/node-game-of-risk#readme"
+  "homepage": "https://github.com/adamjaso/node-game-of-risk#readme",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.com"
+  }
 }
