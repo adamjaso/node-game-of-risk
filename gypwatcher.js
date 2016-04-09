@@ -21,10 +21,11 @@ watcher.on('change', function(file) {
     proc.on('exit', function() {
         console.log('node-gyp complete');
         try {
-             require('./demo');
+             require('./demo')();
         } catch (e) {
             console.error(e);
         }
+
         isRunning = false;
     });
 });

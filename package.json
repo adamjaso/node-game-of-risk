@@ -10,6 +10,7 @@
     "chokidar": "^1.4.3"
   },
   "scripts": {
+    "start": "node gypwatcher.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
