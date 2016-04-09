@@ -13,11 +13,12 @@ namespace Risk {
 
     private:
         bool log = false;
+        int numDice = 0;
         int numUsable = -1;
         std::vector<Die> dice;
 
     public:
-        Dice(int num) {
+        Dice(int num) : numDice(num) {
             dice.reserve(num);
             for (int i = 0; i < num; i++) {
                 Die die = Die::Die();
@@ -51,7 +52,7 @@ namespace Risk {
         }
 
         int GetNumDice() {
-            return this->dice.size();
+            return this->numDice;
         }
 
         void SetNumUsable(int numUsable) {

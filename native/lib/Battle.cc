@@ -17,21 +17,21 @@ namespace Risk {
     using v8::Local;
     using v8::String;
 
-    class Battle : public ObjectWrap {
+    class Battle {
 
     private:
         bool log = false;
 
-    protected:
+    public:
         Player& offense;
         Player& defense;
 
     public:
-        Battle(int off, int def) : offense(*Player::NewInstance("offense", 3, off)), defense(*Player::NewInstance("defense", 2, def)) {// : offense("offense", 3, off), defense("defense", 2, def) {
-            // this->offense = *Player::NewInstance("offense", 3, off);
-            // this->defense = *Player::NewInstance("defense", 2, def);
-            SetDebug(this->log);
-        }
+        Battle(int off, int def) :
+            offense(*new Player("offense", 3, off)),
+            defense(*new Player("defense", 2, def)) {
+                SetDebug(this->log);
+                }
 
         ~Battle() {}
 
@@ -136,6 +136,49 @@ namespace Risk {
             this->defense.GetLosses().Print();
         }
 
+    };
+
+
+
+    class BattleWrap : public ObjectWrap {
+    public:
+        Battle* battle;
+
+    public:
+        BattleWrap() : battle(NULL) {}
+
+        BattleWrap(Battle* battle) : battle(battle) {}
+
+        BattleWrap(int off, int def) : battle(new Battle(off, def)) {}
+
+        ~BattleWrap() {}
+
+        Battle* GetBattle() {
+            return this->battle;
+        }
+
+        static BattleWrap* NewInstance(int off, int def) {
+            Nan::HandleScope scope;
+            v8::Local<v8::Function> ctor = Nan::New(constructor());
+            v8::Local<v8::Value> argv[] = { Nan::New(off), Nan::New(def) };
+            v8::Handle<v8::Object> instance = Nan::NewInstance(ctor, 2, argv).ToLocalChecked();
+            return Nan::ObjectWrap::Unwrap<BattleWrap>(instance);
+        }
+
+        static BattleWrap* NewInstance(Battle& battle) {
+            return NewInstance(battle);
+        }
+
+        static BattleWrap* NewInstance(Battle* battle) {
+            Nan::HandleScope scope;
+            v8::Local<v8::Function> ctor = Nan::New(constructor());
+            v8::Local<v8::Value> argv[] = {  };
+            v8::Handle<v8::Object> instance = Nan::NewInstance(ctor, 0, argv).ToLocalChecked();
+            BattleWrap* wrap = Nan::ObjectWrap::Unwrap<BattleWrap>(instance);
+            wrap->battle = battle;
+            return wrap;
+        }
+
         // Node.js Addon Boilerplate
 
         static inline Nan::Persistent<v8::Function>& constructor() {
@@ -144,8 +187,10 @@ namespace Risk {
         }
 
         static NAN_MODULE_INIT(Init) {
+            Nan::HandleScope scope;
+
             // define prototype
-            v8::Local<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
+            v8::Handle<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
             v8::Local<v8::ObjectTemplate> otpl = tpl->InstanceTemplate();
             tpl->SetClassName(Nan::New("Battle").ToLocalChecked());
             tpl->InstanceTemplate()->SetInternalFieldCount(1);
@@ -172,82 +217,83 @@ namespace Risk {
         }
 
         static NAN_METHOD(New) {
-            if (info.IsConstructCall()) {
-                int offense = info[0]->IsNumber() ? Nan::To<int>(info[0]).FromJust() : 0;
-                int defense = info[1]->IsNumber() ? Nan::To<int>(info[1]).FromJust() : 0;
-                Battle *obj = new Battle(offense, defense);
-                obj->Wrap(info.This());
-                info.GetReturnValue().Set(info.This());
-            } else {
-                const int argc = 1;
-                v8::Local<v8::Value> argv[argc] = {info[0]};
-                v8::Local<v8::Function> cons = Nan::New(constructor());
-                info.GetReturnValue().Set(Nan::NewInstance(cons, argc, argv).ToLocalChecked());
-            }
+            Nan::HandleScope scope;
+
+            int offense = info[0]->IsNumber() ? Nan::To<int>(info[0]).FromJust() : 0;
+            int defense = info[1]->IsNumber() ? Nan::To<int>(info[1]).FromJust() : 0;
+            BattleWrap *obj = new BattleWrap(offense, defense);
+            obj->Wrap(info.This());
+            info.GetReturnValue().Set(info.This());
         }
 
         /**
          * Battle.prototype.offense
          */
         static NAN_GETTER(GetOffense) {
-            Battle *battle = Nan::ObjectWrap::Unwrap<Battle>(info.Holder());
-            info.GetReturnValue().Set(battle->offense.handle());
+            Nan::HandleScope scope;
+
+            BattleWrap* battle = ObjectWrap::Unwrap<BattleWrap>(info.Holder());
+            PlayerWrap* wrap = PlayerWrap::NewInstance(battle->battle->offense);
+            info.GetReturnValue().Set(wrap->handle());
         }
 
         /**
          * Battle.prototype.defense
          */
         static NAN_GETTER(GetDefense) {
-            Battle *battle = Nan::ObjectWrap::Unwrap<Battle>(info.Holder());
-            info.GetReturnValue().Set(battle->defense.handle());
+            Nan::HandleScope scope;
+
+            BattleWrap* battle = ObjectWrap::Unwrap<BattleWrap>(info.Holder());
+            PlayerWrap* wrap = PlayerWrap::NewInstance(battle->battle->defense);
+            info.GetReturnValue().Set(wrap->handle());
         }
 
         /**
          * Battle.prototype.numDefense
          */
         static NAN_GETTER(GetNumDefense) {
-            Battle *battle = Nan::ObjectWrap::Unwrap<Battle>(info.Holder());
-            info.GetReturnValue().Set(battle->GetNumDefense());
+            Nan::HandleScope scope;
+            info.GetReturnValue().Set(Unwrap(info)->GetNumDefense());
         }
 
         /**
          * Battle.prototype.numOffense
          */
         static NAN_GETTER(GetNumOffense) {
-            Battle *battle = Nan::ObjectWrap::Unwrap<Battle>(info.Holder());
-            info.GetReturnValue().Set(battle->GetNumOffense());
+            Nan::HandleScope scope;
+            info.GetReturnValue().Set(Unwrap(info)->GetNumOffense());
         }
 
         /**
          * Battle.prototype.numDefenseRemaining
          */
         static NAN_GETTER(GetNumDefenseRemaining) {
-            Battle *battle = Nan::ObjectWrap::Unwrap<Battle>(info.Holder());
-            info.GetReturnValue().Set(battle->GetNumDefenseRemaining());
+            Nan::HandleScope scope;
+            info.GetReturnValue().Set(Unwrap(info)->GetNumDefenseRemaining());
         }
 
         /**
          * Battle.prototype.numOffenseRemaining
          */
         static NAN_GETTER(GetNumOffenseRemaining) {
-            Battle *battle = Nan::ObjectWrap::Unwrap<Battle>(info.Holder());
-            info.GetReturnValue().Set(battle->GetNumOffenseRemaining());
+            Nan::HandleScope scope;
+            info.GetReturnValue().Set(Unwrap(info)->GetNumOffenseRemaining());
         }
 
         /**
          * Battle.prototype.numOffenseWins
          */
         static NAN_GETTER(GetNumOffenseWins) {
-            Battle *battle = Nan::ObjectWrap::Unwrap<Battle>(info.Holder());
-            info.GetReturnValue().Set(battle->GetNumOffenseWins());
+            Nan::HandleScope scope;
+            info.GetReturnValue().Set(Unwrap(info)->GetNumOffenseWins());
         }
 
         /**
          * Battle.prototype.numDefenseWins
          */
         static NAN_GETTER(GetNumDefenseWins) {
-            Battle *battle = Nan::ObjectWrap::Unwrap<Battle>(info.Holder());
-            info.GetReturnValue().Set(battle->GetNumDefenseWins());
+            Nan::HandleScope scope;
+            info.GetReturnValue().Set(Unwrap(info)->GetNumDefenseWins());
         }
 
         /**
@@ -255,7 +301,7 @@ namespace Risk {
          */
         static NAN_METHOD(PlaySync) {
             Nan::HandleScope scope;
-            Battle *battle = Nan::ObjectWrap::Unwrap<Battle>(info.Holder());
+            Battle* battle = Unwrap(info);
             int numPlays = info.Length() > 0 ? info[0]->Uint32Value() : 1;
             battle->PlayFor(numPlays);
         }
@@ -265,8 +311,7 @@ namespace Risk {
          */
         static NAN_METHOD(Reset) {
             Nan::HandleScope scope;
-            Battle *battle = Nan::ObjectWrap::Unwrap<Battle>(info.Holder());
-            battle->Reset();
+            Unwrap(info)->Reset();
         }
 
         /**
@@ -274,9 +319,8 @@ namespace Risk {
          */
         static NAN_METHOD(SetDebug) {
             Nan::HandleScope scope;
-            Battle *battle = Nan::ObjectWrap::Unwrap<Battle>(info.Holder());
             bool debug = info.Length() > 0 ? !info[0]->IsFalse() : true;
-            battle->SetDebug(debug);
+            Unwrap(info)->SetDebug(debug);
             // info.GetReturnValue().Set(battle);
         }
 
@@ -285,6 +329,15 @@ namespace Risk {
          */
         static NAN_METHOD(PlayAsync);
 
+
+
+        static Battle* Unwrap(Nan::NAN_METHOD_ARGS_TYPE info) {
+            return ObjectWrap::Unwrap<BattleWrap>(info.Holder())->battle;
+        }
+
+        static Battle* Unwrap(Nan::NAN_GETTER_ARGS_TYPE info) {
+            return ObjectWrap::Unwrap<BattleWrap>(info.Holder())->battle;
+        }
     };
 
 }

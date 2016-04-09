@@ -6,7 +6,15 @@
 
 namespace Risk {
 
-    class Stats : public Nan::ObjectWrap {
+    using Nan::HandleScope;
+    using Nan::ObjectWrap;
+    using v8::FunctionCallbackInfo;
+    using v8::Value;
+    using v8::Local;
+    using v8::Object;
+    using v8::Function;
+
+    class Stats {
 
         std::string name;
         long decimals = 10000L;
@@ -56,15 +64,43 @@ namespace Risk {
             }
             return num;
         }
+    };
 
-        static Stats* NewInstance(std::string name, int decimals) {
+
+
+    class StatsWrap : public ObjectWrap {
+
+    public:
+        Stats* stats;
+
+    public:
+        StatsWrap() : stats(NULL) {}
+
+        StatsWrap(Stats* stats) : stats(stats) {};
+
+        StatsWrap(std::string name, int decimals) : stats(new Stats(name, decimals)) {}
+
+        ~StatsWrap() {}
+
+        static StatsWrap* NewInstance(std::string name, int decimals) {
             v8::Local<v8::Function> ctor = Nan::New(constructor());
             v8::Local<v8::Value> argv[] = { v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), name.c_str()), Nan::New(decimals) };
             v8::Local<v8::Object> instance = Nan::NewInstance(ctor, 2, argv).ToLocalChecked();
-            return Nan::ObjectWrap::Unwrap<Stats>(instance);
+            return Nan::ObjectWrap::Unwrap<StatsWrap>(instance);
         }
 
-        // Node.js Addon Boilerplate
+        static StatsWrap* NewInstance(Stats* stats) {
+            return NewInstance(*stats);
+        }
+
+        static StatsWrap* NewInstance(Stats& stats) {
+            v8::Local<v8::Function> ctor = Nan::New(constructor());
+            v8::Local<v8::Value> argv[] = {  };
+            v8::Local<v8::Object> instance = Nan::NewInstance(ctor, 0, argv).ToLocalChecked();
+            StatsWrap* wrap = Nan::ObjectWrap::Unwrap<StatsWrap>(instance);
+            wrap->stats = &stats;
+            return wrap;
+        }
 
         static inline Nan::Persistent<v8::Function>& constructor() {
             static Nan::Persistent<v8::Function> ctor;
@@ -72,6 +108,8 @@ namespace Risk {
         }
 
         static NAN_MODULE_INIT(Init) {
+            HandleScope scope;
+
             // define prototype
             v8::Local<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
             v8::Local<v8::ObjectTemplate> otpl = tpl->InstanceTemplate();
@@ -93,27 +131,23 @@ namespace Risk {
         }
 
         static NAN_METHOD(New) {
-            if (info.IsConstructCall()) {
-                std::string name;
-                if (info[0]->IsString()) {
-                    name = *v8::String::Utf8Value(info[0]->ToString());
-                } else {
-                    name = "";
-                }
-                int decimals = info[1]->IsNumber() ? Nan::To<int>(info[1]).FromJust() : 1;
-                Stats *obj = new Stats(name, decimals);
-                obj->Wrap(info.This());
-                info.GetReturnValue().Set(info.This());
+            HandleScope scope;
 
+            std::string name;
+            if (info[0]->IsString()) {
+                name = *v8::String::Utf8Value(info[0]->ToString());
             } else {
-                const int argc = 1;
-                v8::Local<v8::Value> argv[argc] = {info[0]};
-                v8::Local<v8::Function> cons = Nan::New(constructor());
-                info.GetReturnValue().Set(Nan::NewInstance(cons, argc, argv).ToLocalChecked());
+                name = "";
             }
+            int decimals = info[1]->IsNumber() ? Nan::To<int>(info[1]).FromJust() : 1;
+            StatsWrap *obj = new StatsWrap(name, decimals);
+            obj->Wrap(info.This());
+            info.GetReturnValue().Set(info.This());
         }
 
         static NAN_METHOD(NewInstance) {
+            HandleScope scope;
+
             v8::Local<v8::Function> cons = Nan::New(constructor());
             v8::Local<v8::String> name = info[0]->ToString(); //info[0]->IsString() ?  : v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "");
             v8::Local<v8::Integer> decimals = info[1]->ToInteger();
@@ -123,25 +157,42 @@ namespace Risk {
         }
 
         static NAN_METHOD(Add) {
+            HandleScope scope;
+
             double num = info[0]->NumberValue();
-            Nan::ObjectWrap::Unwrap<Stats>(info.Holder())->Add(num);
+            Unwrap(info)->Add(num);
         }
 
         static NAN_GETTER(GetAverage) {
-            info.GetReturnValue().Set(Nan::New(Nan::ObjectWrap::Unwrap<Stats>(info.Holder())->GetAverage()));
+            HandleScope scope;
+            double average = Unwrap(info)->GetAverage();
+            info.GetReturnValue().Set(Nan::New(average));
         }
 
         static NAN_GETTER(GetStDev) {
-            info.GetReturnValue().Set(Nan::New(Nan::ObjectWrap::Unwrap<Stats>(info.Holder())->GetStDev()));
+            HandleScope scope;
+            double stdev = Unwrap(info)->GetStDev();
+            info.GetReturnValue().Set(Nan::New(stdev));
         }
 
         static NAN_GETTER(GetCount) {
-            double count = Nan::ObjectWrap::Unwrap<Stats>(info.Holder())->GetCount();
+            HandleScope scope;
+            double count = Unwrap(info)->GetCount();
             info.GetReturnValue().Set(Nan::New(count));
         }
 
         static NAN_GETTER(GetSum) {
-            info.GetReturnValue().Set(Nan::New(Nan::ObjectWrap::Unwrap<Stats>(info.Holder())->GetSum()));
+            HandleScope scope;
+            double sum = Unwrap(info)->GetSum();
+            info.GetReturnValue().Set(Nan::New(sum));
+        }
+
+        static Stats* Unwrap(Nan::NAN_METHOD_ARGS_TYPE info) {
+            return ObjectWrap::Unwrap<StatsWrap>(info.Holder())->stats;
+        }
+
+        static Stats* Unwrap(Nan::NAN_GETTER_ARGS_TYPE info) {
+            return ObjectWrap::Unwrap<StatsWrap>(info.Holder())->stats;
         }
 
     };

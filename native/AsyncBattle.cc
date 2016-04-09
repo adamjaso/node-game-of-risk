@@ -24,11 +24,13 @@ namespace Risk {
     class AsyncBattle : public AsyncWorker {
 
     private:
-        class Battle& battle;
         int numPlays = 0;
+        Battle* battle;
 
     public:
-        explicit AsyncBattle(Callback *callback, Battle& battle, int numPlays) : AsyncWorker(callback), battle(battle), numPlays(numPlays) {}
+        explicit AsyncBattle(Callback* callback, BattleWrap* battle, int numPlays) : AsyncWorker(callback),
+            numPlays(numPlays),
+            battle(battle->GetBattle()) {}
 
         ~AsyncBattle() {}
 
@@ -37,7 +39,7 @@ namespace Risk {
       // here, so everything we need for input and output
       // should go on `this`.
         void Execute () {
-            this->battle.PlayFor(this->numPlays);
+            this->battle->PlayFor(this->numPlays);
         }
 
         // Executed when the async work is complete
@@ -50,36 +52,42 @@ namespace Risk {
                 Null()
             };
 
-            callback->Call(1, argv);
+            BattleWrap* battle = BattleWrap::NewInstance(this->battle);
+
+            callback->Call(battle->handle(), 1, argv);
         }
+
     };
 
-};
+    NAN_METHOD(BattleWrap::PlayAsync) {
+        Nan::HandleScope scope;
 
-NAN_METHOD(Battle::PlayAsync) {
-    Nan::HandleScope scope;
+        Local<Object> battle;
+        int numPlays;
+        Local<Function> callback;
 
-    Local<Object> battle;
-    int numPlays;
-    Local<Function> callback;
+        if (3 == info.Length()) {
+            battle = info[0].As<v8::Object>();
+            numPlays = info[1]->Uint32Value();
+            callback = info[2].As<v8::Function>();
 
-    if (3 == info.Length()) {
-        battle = info[0].As<v8::Object>();
-        numPlays = info[1]->Uint32Value();
-        callback = info[2].As<v8::Function>();
+        } else if (2 == info.Length()) {
+            battle = info.This();
+            numPlays = info[0]->Uint32Value();
+            callback = info[1].As<v8::Function>();
 
-    } else if (2 == info.Length()) {
-        battle = info.Holder();
-        numPlays = info[0]->Uint32Value();
-        callback = info[1].As<v8::Function>();
+        } else {
+            battle = info.This();
+            numPlays = 1;
+            callback = info[0].As<v8::Function>();
+        }
 
-    } else {
-        battle = info.Holder();
-        numPlays = 1;
-        callback = info[0].As<v8::Function>();
-    }
+        Callback* ncb = new Nan::Callback(callback);
+        BattleWrap* bw = Nan::ObjectWrap::Unwrap<BattleWrap>(battle);
+        AsyncBattle* ab = new Risk::AsyncBattle(ncb, bw, numPlays);
+        AsyncQueueWorker(ab);
+    };
 
-    AsyncQueueWorker(new AsyncBattle(new Nan::Callback(callback), *Nan::ObjectWrap::Unwrap<Battle>(battle), numPlays));
 };
 
 #endif
