@@ -49,3 +49,5 @@ GameOfRisk.generateDatabase(numOffense: Integer, numDefense: Integer): Function
 
 `node winstats` will generate an SQLite3 Database in `./winstats.sqlite` containing
 the winning results for the # offense vs # defense used in `./winstats.js`.
+
+`python winstats.py` will generate a plot once the SQLite3 database has been generated.
