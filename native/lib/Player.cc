@@ -10,7 +10,7 @@ using v8::Object;
 
 namespace Risk {
 
-    class Player { //: public Nan::ObjectWrap {
+    class Player {
     private:
         static long autoPlayerId;
 

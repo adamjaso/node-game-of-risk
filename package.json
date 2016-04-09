@@ -4,6 +4,7 @@
   "description": "Game of Risk Calculator",
   "main": "index.js",
   "dependencies": {
+    "async": "^2.0.0-rc.3",
     "nan": "^2.2.1"
   },
   "devDependencies": {
